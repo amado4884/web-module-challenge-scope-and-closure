@@ -80,18 +80,16 @@ finalScore(inning, 9) might return:
 
 */
 
-function finalScore(inning, num) {
-  let Home = 0;
-  let Away = 0;
-  let homeBatting = true;
-  return function () {
-    for (let i = 1; i <= num; i++) {
-      if (homeBatting === true) Home += inning();
-      else Away += inning();
-      homeBatting = !homeBatting;
-    }
-    return { Home, Away };
+function finalScore(cb, num) {
+  const points = {
+    Home: 0,
+    Away: 0,
   };
+  for (let i = 0; i < num; i++) {
+    points.Home += cb();
+    points.Away += cb();
+  }
+  return points;
 }
 // const getInningScore = finalScore(inning, 9);
 // console.log(getInningScore());
@@ -99,8 +97,7 @@ function finalScore(inning, num) {
 
 Create a function called `scoreboard` that accepts the following parameters: 
 
-(1) Callback function `getInningScore`
-(2) Callback function `inning`
+(1) Callback function `inning`
 (2) A number of innings
 
 and returns the score at each pont in the game, like so:
@@ -117,27 +114,60 @@ and returns the score at each pont in the game, like so:
 
 Final Score: awayTeam - homeTeam */
 
-function scoreboard(getInningScore, inning, numberOfInnings) {
-  let currentInning = 1;
-  const scoreList = new Array(numberOfInnings + 1).fill({ Home: 0, Away: 0 });
-  const inningScore = getInningScore(inning, 1);
-  return () => {
-    const { Home, Away } = inningScore();
-    scoreList[currentInning] = { Home, Away };
-    let end = "st";
-    if (currentInning === 2) end = "nd";
-    else if (currentInning === 3) end = "rd";
-    else if (currentInning > 3) end = "th";
-    return `${currentInning++ + end} inning: ${Away} - ${Home}`;
+// Scoreboard with closure (contained scoreboard)
+// function scoreboard(cb, numberOfInnings) {
+//   let currentInning = 1;
+//   const scoreList = new Array(numberOfInnings + 1).fill({ Home: 0, Away: 0 });
+//   return () => {
+//     if (currentInning > numberOfInnings)
+//       return `Final Score: Away: ${scoreList[numberOfInnings].Away} - Home: ${scoreList[numberOfInnings].Home}`;
+//     const Away = cb() + scoreList[currentInning - 1].Away;
+//     const Home = cb() + scoreList[currentInning - 1].Home;
+//     scoreList[currentInning] = { Home, Away };
+//     let end = "st";
+//     if (currentInning === 2) end = "nd";
+//     else if (currentInning === 3) end = "rd";
+//     else if (currentInning > 3) end = "th";
+//     return `${currentInning++ + end} inning: Away: ${Away} - Home: ${Home}`;
+//   };
+// }
+// const sb = scoreboard(inning, 9);
+
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+// console.log(sb());
+
+function scoreboard(cb, numberOfInnings) {
+  const score = {
+    Home: 0,
+    Away: 0,
   };
+  const scoreList = [];
+  for (let i = 0; i < numberOfInnings; i++) {
+    score.Away += cb();
+    score.Home += cb();
+    scoreList.push({ Away: score.Away, Home: score.Home });
+  }
+  let result = "";
+  scoreList.forEach((score, i) => {
+    let end = "st";
+    if (i + 1 === 2) end = "nd";
+    else if (i + 1 === 3) end = "rd";
+    else if (i + 1 > 3) end = "th";
+    result += `${i + 1 + end} inning: Away: ${score.Away} - Home: ${
+      score.Home
+    }\n`;
+  });
+  result += `\nFinal Score: Away: ${
+    scoreList[scoreList.length - 1].Away
+  } - Home: ${scoreList[scoreList.length - 1].Home}\n`;
+  return result;
 }
-const sb = scoreboard(finalScore, inning, 9);
-console.log(sb());
-console.log(sb());
-console.log(sb());
-console.log(sb());
-console.log(sb());
-console.log(sb());
-console.log(sb());
-console.log(sb());
-console.log(sb());
+console.log(scoreboard(inning, 9));
